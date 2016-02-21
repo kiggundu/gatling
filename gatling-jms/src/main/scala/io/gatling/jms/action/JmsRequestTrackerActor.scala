@@ -15,6 +15,8 @@
  */
 package io.gatling.jms.action
 
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 import javax.jms.Message
 
 import scala.collection.mutable
@@ -52,6 +54,17 @@ object JmsRequestTrackerActor {
   def props(statsEngine: StatsEngine) = Props(new JmsRequestTrackerActor(statsEngine))
 }
 
+import scala.collection.JavaConverters._
+
+object MessageCorrelator {
+  val sentMessages = new ConcurrentHashMap[String, (Long, List[JmsCheck], Session, ActorRef, String)].asScala
+  val receivedMessages = new ConcurrentHashMap[String, (Long, Message)].asScala
+  val receivedMessagesCount = new AtomicInteger(0)
+  val sentMessagesCount = new AtomicInteger(0)
+  val failMessagesCount = new AtomicInteger(0)
+
+}
+
 /**
  * Bookkeeping actor to correlate request and response JMS messages
  * Once a message is correlated, it publishes to the Gatling core DataWriter
@@ -66,7 +79,8 @@ class JmsRequestTrackerActor(statsEngine: StatsEngine) extends BaseActor {
   def receive = {
 
     // message was sent; add the timestamps to the map
-    case MessageSent(corrId, startDate, checks, session, next, title) =>
+    case MessageSent(corrId, startDate, checks, session, next, title) => {
+      logger.debug("==>Message Received: " + MessageCorrelator.receivedMessagesCount.incrementAndGet())
       receivedMessages.get(corrId) match {
         case Some((receivedDate, message)) =>
           // message was received out of order, lets just deal with it
@@ -78,9 +92,11 @@ class JmsRequestTrackerActor(statsEngine: StatsEngine) extends BaseActor {
           val sentMessage = (startDate, checks, session, next, title)
           sentMessages += corrId -> sentMessage
       }
+    }
 
     // message was received; publish to the datawriter and remove from the hashmap
-    case MessageReceived(corrId, receivedDate, message) =>
+    case MessageReceived(corrId, receivedDate, message) => {
+      logger.debug("==>Message Sent: " + MessageCorrelator.sentMessagesCount.incrementAndGet())
       sentMessages.get(corrId) match {
         case Some((startDate, checks, session, next, title)) =>
           processMessage(session, startDate, receivedDate, checks, message, next, title)
@@ -92,6 +108,7 @@ class JmsRequestTrackerActor(statsEngine: StatsEngine) extends BaseActor {
           val receivedMessage = (receivedDate, message)
           receivedMessages += corrId -> receivedMessage
       }
+    }
   }
 
   /**
