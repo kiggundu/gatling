@@ -43,7 +43,7 @@ if not defined GATLING_CONF set GATLING_CONF="%GATLING_HOME%"\conf
 echo GATLING_HOME is set to "%GATLING_HOME%"
 
 set JAVA_OPTS=%JAVA_OPTS% -server -Xmx1G -XX:+UseG1GC -XX:MaxGCPauseMillis=30 -XX:G1HeapRegionSize=16m -XX:InitiatingHeapOccupancyPercent=75 -XX:+ParallelRefProcEnabled -XX:+PerfDisableSharedMem -XX:+AggressiveOpts -XX:+OptimizeStringConcat -XX:+HeapDumpOnOutOfMemoryError -Djava.net.preferIPv4Stack=true -Djava.net.preferIPv6Addresses=false
-set COMPILER_OPTS=-Xss10M %JAVA_OPTS%
+set COMPILER_OPTS=-Xss100M %JAVA_OPTS%
 rem Setup classpaths
 set COMMON_CLASSPATH=%GATLING_CONF%;%JAVA_CLASSPATH%
 set COMPILER_CLASSPATH="%GATLING_HOME%"\lib\zinc\*;%COMMON_CLASSPATH%
@@ -64,6 +64,8 @@ for %%i in ("%GATLING_HOME%\lib\*.jar") do call :addToPath "%%i"
 %JAVA% %COMPILER_OPTS% -cp %COMPILER_CLASSPATH% io.gatling.compiler.ZincCompiler -ccp %COMPILATION_CLASSPATH% %USER_ARGS%  2>NUL
 rem Run Gatling
 %JAVA% %JAVA_OPTS% -cp %GATLING_CLASSPATH% io.gatling.app.Gatling %USER_ARGS%
+if %errorlevel% neq 0 exit /b %errorlevel%
+rem The above line will forward any potential exit codes from Java if Gatling failed
 
 goto exit
 

@@ -92,6 +92,7 @@ object ConfigKeys {
     object ahc {
       val KeepAlive = "gatling.http.ahc.keepAlive"
       val ConnectTimeout = "gatling.http.ahc.connectTimeout"
+      val HandshakeTimeout = "gatling.http.ahc.handshakeTimeout"
       val PooledConnectionIdleTimeout = "gatling.http.ahc.pooledConnectionIdleTimeout"
       val ReadTimeout = "gatling.http.ahc.readTimeout"
       val MaxRetry = "gatling.http.ahc.maxRetry"
@@ -121,6 +122,10 @@ object ConfigKeys {
     }
   }
 
+  object jms {
+    val AcknowledgedMessagesBufferSize = "gatling.jms.acknowledgedMessagesBufferSize"
+  }
+
   object data {
     val Writers = "gatling.data.writers"
 
@@ -145,6 +150,14 @@ object ConfigKeys {
   }
 
   // [fl]
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
   //
   //
   //

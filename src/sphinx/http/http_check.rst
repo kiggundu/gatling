@@ -424,6 +424,22 @@ Saving is an **optional** step for storing the result of the previous step (extr
 
 *key* is a ``String``.
 
+.. _http-check-conditional:
+
+Conditional Checking
+====================
+
+Check execution can be enslave to a condition.
+
+``checkIf(condition)(thenCheck)``
+
+The condition can be of two types:
+
+* ``Expression[Boolean]``
+* ``(Response, Session) => Validation[Boolean]``
+
+Nested thenCheck will only be performed if condition is successful.
+
 Putting it all together
 =======================
 

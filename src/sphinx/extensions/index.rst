@@ -17,11 +17,12 @@ Official Extensions
 Third Parties
 =============
 
-* `Gradle plugin <https://github.com/lkishalmi/gradle-gatling-plugin>`_
+* `Laszlo Kishalmi's Gradle plugin <https://github.com/lkishalmi/gradle-gatling-plugin>`_
+* `CommerceHub's Gradle plugin <https://github.com/commercehub-oss/gatling-gradle-plugin>`_
 * `Cassandra plugin <https://github.com/Mishail/GatlingCql>`_
 * `MQTT plugin <https://github.com/mnogu/gatling-mqtt>`_
 * `Kafka plugin <https://github.com/mnogu/gatling-kafka>`_
-* `RabbitMQ (obsolete) plugin <https://github.com/fhalim/gatling-rabbitmq>`_
+* `RabbitMQ plugin <https://github.com/maiha/gatling-amqp>`_
 * `AMQP plugin <https://github.com/maiha/gatling-amqp>`_
 
 .. warning::

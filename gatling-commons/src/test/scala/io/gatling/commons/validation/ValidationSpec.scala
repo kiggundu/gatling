@@ -16,7 +16,7 @@
 package io.gatling.commons.validation
 
 import io.gatling.BaseSpec
-import io.gatling.commons.util.ExceptionHelper._
+import io.gatling.commons.util.Throwables._
 
 class ValidationSpec extends BaseSpec {
 
@@ -40,8 +40,8 @@ class ValidationSpec extends BaseSpec {
         Success(1)
       }
 
-    safely()(exceptionThrower) shouldBe "Woops".failure
-    safely(_ + "y")(exceptionThrower) shouldBe "Woopsy".failure
+    safely()(exceptionThrower) shouldBe "Exception: Woops".failure
+    safely(_ + "y")(exceptionThrower) shouldBe "Exception: Woopsy".failure
   }
 
   "map" should "apply the passed function to the value when called on a Success" in {

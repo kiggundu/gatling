@@ -219,11 +219,12 @@ class WsActor(wsName: String, statsEngine: StatsEngine, httpEngine: HttpEngine) 
     case action: WsUserAction =>
       // reconnect on first client message tentative
       val newTx = tx.copy(reconnectCount = tx.reconnectCount + 1)
-      WsTx.start(newTx, self, httpEngine)
+      WsTx.start(newTx, self, httpEngine, statsEngine)
 
       context.become(reconnectingState(status, reason, action))
 
     case unexpected =>
+      // FIXME we're losing check timeout!
       logger.info(s"Discarding unknown message $unexpected while in disconnected state")
   }
 
@@ -238,6 +239,7 @@ class WsActor(wsName: String, statsEngine: StatsEngine, httpEngine: HttpEngine) 
       self ! pendingAction
 
     case unexpected =>
+      // FIXME we're losing check timeout!
       logger.info(s"Discarding unknown message $unexpected while in reconnecting state")
   }
 

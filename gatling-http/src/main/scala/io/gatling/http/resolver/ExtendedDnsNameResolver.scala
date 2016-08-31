@@ -46,7 +46,6 @@ class ExtendedDnsNameResolver(eventLoop: EventLoop, configuration: GatlingConfig
     extends DnsNameResolver(
       eventLoop,
       ExtendedDnsNameResolver.NioDatagramChannelFactory,
-      NettyDnsConstants.AnyLocalAddress,
       DnsServerAddresses.defaultAddresses,
       NoopDnsCache.INSTANCE,
       configuration.http.dns.queryTimeout,
@@ -56,7 +55,9 @@ class ExtendedDnsNameResolver(eventLoop: EventLoop, configuration: GatlingConfig
       false,
       4096,
       true,
-      HostsFileEntriesResolver.DEFAULT
+      HostsFileEntriesResolver.DEFAULT,
+      NettyDnsConstants.DefaultSearchDomain,
+      1
     ) {
 
   override def doResolve(inetHost: String, promise: Promise[InetAddress], resolveCache: DnsCache): Unit =

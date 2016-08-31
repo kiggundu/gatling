@@ -116,7 +116,7 @@
           <input type="checkbox" id="randomSwitch" name="randomSwitch">
 
           <div class="function-details">
-            Current user will continue in one the specified weighted chains. Can be used to simulate simple Markov
+            Current user will continue in one of the specified weighted chains. Can be used to simulate simple Markov
             chains
             <dl>
               <dt>(Map[%,Chain])</dt>
@@ -132,7 +132,7 @@
           <input type="checkbox" id="randomSwitchOrElse" name="randomSwitchOrElse">
 
           <div class="function-details">
-            Current user will continue in one the specified weighted chains. Can be used to simulate simple Markov
+            Current user will continue in one of the specified weighted chains. Can be used to simulate simple Markov
             chains. Fallback available if no switch is selected
             <dl>
               <dt>(Map[%,Chain]){chain}</dt>
@@ -908,8 +908,8 @@
         </div>
 
         <div class="function">
-          <label class="function-syntax" for="percentiles1">percentiles1</label>
-          <input type="checkbox" id="percentiles1" name="percentiles1">
+          <label class="function-syntax" for="percentile1">percentile1</label>
+          <input type="checkbox" id="percentile1" name="percentile1">
 
           <div class="function-details">
             Perform the assertion on the first percentile of the stat
@@ -917,8 +917,8 @@
         </div>
 
         <div class="function">
-          <label class="function-syntax" for="percentiles2">percentiles2</label>
-          <input type="checkbox" id="percentiles2" name="percentiles2">
+          <label class="function-syntax" for="percentile2">percentile2</label>
+          <input type="checkbox" id="percentile2" name="percentile2">
 
           <div class="function-details">
             Perform the assertion on the second percentile of the stat
@@ -926,8 +926,8 @@
         </div>
 
         <div class="function">
-          <label class="function-syntax" for="percentiles3">percentiles3</label>
-          <input type="checkbox" id="percentiles3" name="percentiles3">
+          <label class="function-syntax" for="percentile3">percentile3</label>
+          <input type="checkbox" id="percentile3" name="percentile3">
 
           <div class="function-details">
             Perform the assertion on the third percentile of the stat
@@ -935,8 +935,8 @@
         </div>
 
         <div class="function">
-          <label class="function-syntax" for="percentiles4">percentiles4</label>
-          <input type="checkbox" id="percentiles4" name="percentiles4">
+          <label class="function-syntax" for="percentile4">percentile4</label>
+          <input type="checkbox" id="percentile4" name="percentile4">
 
           <div class="function-details">
             Perform the assertion on the fourth percentile of the stat
@@ -3003,8 +3003,21 @@
           <div class="function-details">
             Sends additional properties
             <dl>
-              <dt>(property)</dt>
-              <dd>Where <i>name</i> is the name of the queue</dd>
+              <dt>(key, value)</dt>
+              <dd>Sets <i>value</i> as an object property <i>key</i></dd>
+            </dl>
+          </div>
+        </div>
+
+        <div class="function">
+          <label class="function-syntax" for="jmsType">jmsType</label>
+          <input type="checkbox" id="jmsType" name="jmsType">
+
+          <div class="function-details">
+            Sends additional properties
+            <dl>
+              <dt>(value)</dt>
+              <dd>Sets <i>value</i> as a <a href="https://docs.oracle.com/javaee/6/api/javax/jms/Message.html#setJMSType(java.lang.String)">JMSType</a></dd>
             </dl>
           </div>
         </div>

@@ -18,6 +18,7 @@ package io.gatling.commons.util
 import java.io.{File => JFile, _}
 import java.net.{URISyntaxException, URL}
 import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets._
 
 import scala.io.Source
 import scala.util.Try
@@ -34,22 +35,19 @@ object Io {
       .recover { case e: URISyntaxException => new JFile(url.getPath) }
       .get
 
-    def toByteArray(bufferSize: Int = DefaultBufferSize): Array[Byte] =
+    def toByteArray: Array[Byte] =
       withCloseable(url.openConnection.getInputStream) {
-        _.toByteArray(bufferSize)
+        _.toByteArray
       }
   }
 
   implicit class RichFile(val file: JFile) extends AnyVal {
 
-    def toByteArray(bufferSize: Int = DefaultBufferSize): Array[Byte] =
-      withCloseable(new FileInputStream(file)) {
-        _.toByteArray(bufferSize)
-      }
-
-    def toString(charset: Charset, bufferSize: Int = DefaultBufferSize): String =
-      withCloseable(new FileInputStream(file)) {
-        _.toString(charset, bufferSize)
+    def toByteArray: Array[Byte] =
+      withCloseable(new FileInputStream(file)) { is =>
+        val buf = new Array[Byte](file.length.toInt)
+        is.read(buf)
+        buf
       }
 
     def validateExistingReadable: Validation[JFile] =
@@ -63,26 +61,28 @@ object Io {
 
   implicit class RichInputStream(val is: InputStream) extends AnyVal {
 
-    def toString(charset: Charset, bufferSize: Int = DefaultBufferSize): String = {
-      val writer = new FastStringWriter(bufferSize)
-      val reader = new InputStreamReader(is, charset)
+    def toString(charset: Charset, bufferSize: Int = DefaultBufferSize): String =
+      charset match {
+        case UTF_8 => Utf8InputStreamDecoder.pooled().decode(is)
+        case US_ASCII => UsAsciiInputStreamDecoder.pooled().decode(is)
+        case _ =>
+          val writer = new FastStringWriter(bufferSize)
+          val reader = new InputStreamReader(is, charset)
 
-      reader.copyTo(writer, bufferSize)
+          reader.copyTo(writer, bufferSize)
 
-      writer.toString
-    }
+          writer.toString
+      }
 
-    def toByteArray(bufferSize: Int = DefaultBufferSize): Array[Byte] = {
-
-      val os = new ByteArrayOutputStream()
-      is.copyTo(os, bufferSize)
-
+    def toByteArray(): Array[Byte] = {
+      val os = FastByteArrayOutputStream.pooled()
+      os.write(is)
       os.toByteArray
     }
 
     def copyTo(os: OutputStream, bufferSize: Int = DefaultBufferSize): Int = {
 
-        def copyLarge(buffer: Array[Byte]) = {
+        def copyLarge(buffer: Array[Byte]): Long = {
 
           var lastReadCount: Int = 0
             def read(): Int = {
@@ -141,19 +141,17 @@ object Io {
     }
   }
 
-  def withCloseable[T, C <: AutoCloseable](closeable: C)(block: C => T) = {
+  def withCloseable[T, C <: AutoCloseable](closeable: C)(block: C => T) =
     try
       block(closeable)
     finally
       closeable.close()
-  }
 
-  def withSource[T, C <: Source](closeable: C)(block: C => T) = {
+  def withSource[T, C <: Source](closeable: C)(block: C => T) =
     try
       block(closeable)
     finally
       closeable.close()
-  }
 
   def classpathResourceAsStream(path: String): InputStream =
     Option(ClassLoader.getSystemResourceAsStream(path))

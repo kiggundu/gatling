@@ -15,9 +15,12 @@
  */
 package io.gatling.http
 
+import scala.concurrent.duration._
+
+import io.gatling.commons.validation.Success
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
-import scala.concurrent.duration._
+import io.gatling.http.check.HttpCheck
 
 class HttpCompileTest extends Simulation {
 
@@ -51,6 +54,7 @@ class HttpCompileTest extends Simulation {
     .disableWarmUp
     .warmUp("http://gatling.io")
     .inferHtmlResources(white = WhiteList(".*\\.html"))
+    .hostNameAliases(Map("foo" -> "127.0.0.1"))
 
   val httpConfToVerifyDumpSessionOnFailureBuiltIn = http.extraInfoExtractor(dumpSessionOnFailure)
 
@@ -121,6 +125,7 @@ class HttpCompileTest extends Simulation {
         println("iterate: " + session("titi"))
         session
       })
+        .exec(http("").httpRequest("JSON", "/support/get-plot-data?chartID=66"))
         .exec(
           http("Page accueil").get("http://localhost:3000")
             .check(
@@ -211,6 +216,11 @@ class HttpCompileTest extends Simulation {
         .exec(http("Create Thing omgomg")
           .post("/things").queryParam("postTest", "${sessionParam}").body(RawFileBody("create_thing.txt")).asJSON
           .check(status.is(201).saveAs("status")))
+        .exec(http("bodyParts")
+          .post("url")
+          .formUpload("name", "path")
+          .bodyPart(RawFileBodyPart("name", "path"))
+          .bodyPart(ElFileBodyPart("name", "path")))
     }
     // Head request
     .exec(http("head on root").head("/").proxy(Proxy("172.31.76.106", 8080).httpsPort(8081)))
@@ -281,4 +291,9 @@ class HttpCompileTest extends Simulation {
     .exponentialPauses
     .uniformPauses(1.5)
     .uniformPauses(1337 seconds)
+
+  // Conditionnal check compile test
+  def isJsonResponse(response: Response): Boolean = response.isReceived && response.header(HttpHeaderNames.ContentType).exists { x => x.contains(HttpHeaderValues.ApplicationJson) }
+  def securedJsonCheck(check: HttpCheck): HttpCheck = checkIf((response: Response, session: Session) => Success(isJsonResponse(response)))(check)
+
 }

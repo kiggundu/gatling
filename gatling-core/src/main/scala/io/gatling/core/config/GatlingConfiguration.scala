@@ -171,6 +171,7 @@ object GatlingConfiguration extends StrictLogging {
         ahc = AhcConfiguration(
           keepAlive = config.getBoolean(http.ahc.KeepAlive),
           connectTimeout = config.getInt(http.ahc.ConnectTimeout),
+          handshakeTimeout = config.getInt(http.ahc.HandshakeTimeout),
           pooledConnectionIdleTimeout = config.getInt(http.ahc.PooledConnectionIdleTimeout),
           readTimeout = config.getInt(http.ahc.ReadTimeout),
           maxRetry = config.getInt(http.ahc.MaxRetry),
@@ -205,6 +206,9 @@ object GatlingConfiguration extends StrictLogging {
           maxQueriesPerResolve = config.getInt(http.dns.MaxQueriesPerResolve)
         )
       ),
+      jms = JmsConfiguration(
+        acknowledgedMessagesBufferSize = config.getInt(jms.AcknowledgedMessagesBufferSize)
+      ),
       data = DataConfiguration(
         dataWriters = config.getStringList(data.Writers).flatMap(DataWriterType.findByName),
         console = ConsoleDataWriterConfiguration(
@@ -226,24 +230,24 @@ object GatlingConfiguration extends StrictLogging {
           writeInterval = config.getInt(data.graphite.WriteInterval)
         )
       ),
-// [fl]
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-// [fl]
+      // [fl]
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      //
+      // [fl]
       config = config
     )
 
@@ -301,10 +305,10 @@ case class DirectoryConfiguration(
 )
 
 case class ChartingConfiguration(
-  noReports:         Boolean,
-  maxPlotsPerSeries: Int,
+  noReports:              Boolean,
+  maxPlotsPerSeries:      Int,
   useGroupDurationMetric: Boolean,
-  indicators:        IndicatorsConfiguration
+  indicators:             IndicatorsConfiguration
 )
 
 case class IndicatorsConfiguration(
@@ -330,6 +334,7 @@ case class HttpConfiguration(
 case class AhcConfiguration(
   keepAlive:                           Boolean,
   connectTimeout:                      Int,
+  handshakeTimeout:                    Int,
   pooledConnectionIdleTimeout:         Int,
   readTimeout:                         Int,
   maxRetry:                            Int,
@@ -347,7 +352,7 @@ case class AhcConfiguration(
   useNativeTransport:                  Boolean,
   usePooledMemory:                     Boolean,
   tcpNoDelay:                          Boolean,
-  soReuseAddress:                          Boolean,
+  soReuseAddress:                      Boolean,
   soLinger: Int,
   soSndBuf: Int,
   soRcvBuf: Int
@@ -368,6 +373,10 @@ case class StoreConfiguration(
   file:      String,
   password:  String,
   algorithm: Option[String]
+)
+
+case class JmsConfiguration(
+  acknowledgedMessagesBufferSize: Int
 )
 
 case class DataConfiguration(
@@ -411,15 +420,30 @@ case class GraphiteDataWriterConfiguration(
 //
 //
 //
+//
+//
+//
+//
+//
+//
 // [fl]
 
 case class GatlingConfiguration(
-  core:     CoreConfiguration,
-  charting: ChartingConfiguration,
-  http:     HttpConfiguration,
-  data:     DataConfiguration,
+     core:      CoreConfiguration,
+     charting:  ChartingConfiguration,
+     http:      HttpConfiguration,
+     jms:       JmsConfiguration,
+     data:      DataConfiguration,
+     // [fl]
+     //
+     // [fl]
+     config:    Config
+) {
+
+  def resolve[T](value: T): T = value
+
+  // [fl]
   //
   //
-  //
-  config:   Config
-)
+  // [fl]
+}

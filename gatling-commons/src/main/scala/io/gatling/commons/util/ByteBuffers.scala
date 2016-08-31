@@ -17,13 +17,31 @@ package io.gatling.commons.util
 
 import java.nio.ByteBuffer
 
+import io.gatling.commons.util.Collections._
+
 object ByteBuffers {
 
   val Empty = ByteBuffer.wrap(Array.empty)
 
   def byteBuffer2ByteArray(byteBuffer: ByteBuffer): Array[Byte] = {
     val bytes = new Array[Byte](byteBuffer.remaining)
-    System.arraycopy(byteBuffer.array, byteBuffer.arrayOffset, bytes, 0, bytes.length)
+    if (byteBuffer.hasArray) {
+      System.arraycopy(byteBuffer.array, byteBuffer.arrayOffset, bytes, 0, bytes.length)
+    } else {
+      byteBuffer.get(bytes)
+    }
+
     bytes
+  }
+
+  def sumByteBuffers(buffers: Iterable[ByteBuffer]): ByteBuffer = {
+    val comb = ByteBuffer.allocate(buffers.sumBy(_.remaining))
+    copyInto(buffers, comb)
+  }
+
+  def copyInto(sources: Iterable[ByteBuffer], target: ByteBuffer): ByteBuffer = {
+    sources.foreach(target.put)
+    target.flip()
+    target
   }
 }

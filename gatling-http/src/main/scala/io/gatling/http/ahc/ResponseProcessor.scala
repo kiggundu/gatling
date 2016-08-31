@@ -49,7 +49,7 @@ import org.asynchttpclient.util.StringUtils.stringBuilder
 class ResponseProcessor(statsEngine: StatsEngine, httpEngine: HttpEngine, configuration: GatlingConfiguration)(implicit actorRefFactory: ActorRefFactory) extends StrictLogging with NameGen {
 
   private def abort(tx: HttpTx, t: Throwable): Unit = {
-    logger.error(s"AsyncHandlerActor crashed on tx $tx, forwarding user to the next action", t)
+    logger.error(s"ResponseProcessor crashed on session=${tx.session} request=${tx.request.requestName}: ${tx.request.ahcRequest} resourceFetcher=${tx.resourceFetcher} redirectCount=${tx.redirectCount}, forwarding user to the next action", t)
     tx.resourceFetcher match {
       case None                  => tx.next ! tx.session.markAsFailed
       case Some(resourceFetcher) => resourceFetcher ! RegularResourceFetched(tx.request.ahcRequest.getUri, KO, Session.Identity, tx.silent)
@@ -98,7 +98,7 @@ class ResponseProcessor(statsEngine: StatsEngine, httpEngine: HttpEngine, config
         logger.warn(s"Request '$fullRequestName' failed: ${errorMessage.getOrElse("")}")
         if (!logger.underlying.isTraceEnabled) logger.debug(dump)
       }
-      logger.trace(dump)
+      logger.debug(dump)
 
       val extraInfo: List[Any] = try {
         tx.request.config.extraInfoExtractor match {
@@ -116,7 +116,7 @@ class ResponseProcessor(statsEngine: StatsEngine, httpEngine: HttpEngine, config
         fullRequestName,
         response.timings,
         status,
-        response.status.map(httpStatus => String.valueOf(httpStatus.getStatusCode)),
+        response.status.map(httpStatus => Integer.toString(httpStatus.getStatusCode)),
         errorMessage,
         extraInfo
       )
@@ -166,6 +166,7 @@ class ResponseProcessor(statsEngine: StatsEngine, httpEngine: HttpEngine, config
 
     val newTx = tx.copy(session = totalUpdate(tx.session))
     logRequest(newTx, status, response, message)
+    // we pass update and not totalUpdate because it's only used for resources where updates are handled differently
     executeNext(newTx, update, status, response)
   }
 
@@ -206,8 +207,9 @@ class ResponseProcessor(statsEngine: StatsEngine, httpEngine: HttpEngine, config
           .setCharset(configuration.core.charset)
           .setChannelPoolPartitioning(originalRequest.getChannelPoolPartitioning)
           .setAddress(originalRequest.getAddress)
-          .setLocalAddress(originalRequest.getLocalAddress)
+          .setNameResolver(originalRequest.getNameResolver)
           .setVirtualHost(originalRequest.getVirtualHost)
+          .setLocalAddress(originalRequest.getLocalAddress)
           .setProxyServer(originalRequest.getProxyServer)
           .setRealm(originalRequest.getRealm)
           .setHeaders(newHeaders)

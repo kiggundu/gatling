@@ -89,6 +89,7 @@ class ResponseBuilder(
   @volatile var storeHtmlOrCss: Boolean = _
   @volatile var startTimestamp: Long = _
   @volatile var endTimestamp: Long = _
+  @volatile private var _reset: Boolean = _
   @volatile private var status: Option[HttpResponseStatus] = None
   @volatile private var headers: HttpHeaders = ResponseBuilder.EmptyHeaders
   @volatile private var chunks: List[ByteBuf] = Nil
@@ -106,33 +107,38 @@ class ResponseBuilder(
   def updateStartTimestamp(): Unit =
     startTimestamp = nowMillis
 
+  def updateEndTimestamp(): Unit =
+    endTimestamp = nowMillis
+
   def setNettyRequest(nettyRequest: NettyRequest) =
     this.nettyRequest = Some(nettyRequest)
 
-  def reset(): Unit = {
-    endTimestamp = 0L
-    status = None
-    headers = ResponseBuilder.EmptyHeaders
-    resetChunks()
-    digests = initDigests()
-  }
+  def markReset(): Unit =
+    _reset = true
+
+  def doReset(): Unit =
+    if (_reset) {
+      _reset = false
+      endTimestamp = 0L
+      status = None
+      headers = ResponseBuilder.EmptyHeaders
+      resetChunks()
+      digests = initDigests()
+    }
 
   private def resetChunks(): Unit = {
     chunks.foreach(_.release())
     chunks = Nil
   }
 
-  def updateEndTimestamp(): Unit = endTimestamp = nowMillis
-
   def accumulate(status: HttpResponseStatus): Unit = {
     this.status = Some(status)
-    endTimestamp = nowMillis
+    updateEndTimestamp()
   }
 
   def accumulate(headers: HttpResponseHeaders): Unit = {
     this.headers = headers.getHeaders
     storeHtmlOrCss = inferHtmlResources && (isHtml(headers.getHeaders) || isCss(headers.getHeaders))
-    updateEndTimestamp()
   }
 
   def accumulate(bodyPart: HttpResponseBodyPart): Unit = {
@@ -199,4 +205,7 @@ class ResponseBuilder(
       case Some(transformer) => transformer.applyOrElse(rawResponse, ResponseBuilder.Identity)
     }
   }
+
+  def buildSafeResponse: Response =
+    HttpResponse(request, nettyRequest, status, headers, NoResponseBody, Map.empty, 0, charset, ResponseTimings(startTimestamp, endTimestamp))
 }

@@ -16,6 +16,7 @@
 package io.gatling.recorder.scenario.template
 
 import io.gatling.commons.util.StringHelper.EmptyFastring
+import io.gatling.http.util.HttpHelper.OkCodes
 import io.gatling.recorder.config.RecorderConfiguration
 import io.gatling.recorder.scenario.{ RequestBodyBytes, RequestBodyParams }
 import io.gatling.recorder.scenario.{ RequestElement, ScenarioExporter }
@@ -33,7 +34,7 @@ private[scenario] object RequestTemplate {
         if (BuiltInHttpMethods.contains(request.method)) {
           fast"${request.method.toLowerCase}($renderUrl)"
         } else {
-          fast"""httpRequest("${request.method}", Left($renderUrl))"""
+          fast"""httpRequest("${request.method}", $renderUrl)"""
         }
 
       def usesBaseUrl: Boolean =
@@ -70,7 +71,7 @@ private[scenario] object RequestTemplate {
       }.getOrElse("")
 
       def renderStatusCheck: Fastring =
-        if (request.statusCode > 210 || request.statusCode < 200)
+        if (!OkCodes.contains(request.statusCode))
           fast"""
 			.check(status.is(${request.statusCode}))"""
         else
@@ -79,7 +80,7 @@ private[scenario] object RequestTemplate {
       def renderResponseBodyCheck: Fastring =
         if (request.responseBody.isDefined && config.http.checkResponseBodies)
           fast"""
-			.check(bodyString.is(RawFileBody("${ScenarioExporter.responseBodyFileName(request)}")))"""
+			.check(bodyBytes.is(RawFileBody("${ScenarioExporter.responseBodyFileName(request)}")))"""
         else
           EmptyFastring
 

@@ -58,13 +58,13 @@ class SimpleJmsClient(
   logger.info(s"Got InitialContext $ctx")
 
   // create QueueConnectionFactory
-  val qcf = ctx.lookup(connectionFactoryName).asInstanceOf[ConnectionFactory]
-  logger.info(s"Got ConnectionFactory $qcf")
+  val cf = ctx.lookup(connectionFactoryName).asInstanceOf[ConnectionFactory]
+  logger.info(s"Got ConnectionFactory $cf")
 
   // create QueueConnection
   val conn = credentials match {
-    case Some(creds) if !anonymousConnect => qcf.createConnection(creds.username, creds.password)
-    case _                                => qcf.createConnection
+    case Some(creds) if !anonymousConnect => cf.createConnection(creds.username, creds.password)
+    case _                                => cf.createConnection
   }
   conn.start()
 
@@ -103,10 +103,11 @@ class SimpleJmsClient(
   /**
    * Wrapper to send a BytesMessage, returns the message ID of the sent message
    */
-  def sendBytesMessage(bytes: Array[Byte], props: Map[String, Any]): Message = {
+  def sendBytesMessage(bytes: Array[Byte], props: Map[String, Any], jmsType: Option[String]): Message = {
     val message = session.createBytesMessage
     message.writeBytes(bytes)
     writePropsToMessage(props, message)
+    jmsType.foreach(message.setJMSType)
     sendMessage(message)
   }
 
@@ -117,28 +118,31 @@ class SimpleJmsClient(
    * for the objectified primitive object types (Integer, Double, Long ...), String objects,
    * and byte arrays."
    */
-  def sendMapMessage(map: Map[String, Any], props: Map[String, Any]): Message = {
+  def sendMapMessage(map: Map[String, Any], props: Map[String, Any], jmsType: Option[String]): Message = {
     val message = session.createMapMessage
     map.foreach { case (key, value) => message.setObject(key, value) }
     writePropsToMessage(props, message)
+    jmsType.foreach(message.setJMSType)
     sendMessage(message)
   }
 
   /**
    * Wrapper to send an ObjectMessage, returns the message ID of the sent message
    */
-  def sendObjectMessage(o: java.io.Serializable, props: Map[String, Any]): Message = {
+  def sendObjectMessage(o: java.io.Serializable, props: Map[String, Any], jmsType: Option[String]): Message = {
     val message = session.createObjectMessage(o)
     writePropsToMessage(props, message)
+    jmsType.foreach(message.setJMSType)
     sendMessage(message)
   }
 
   /**
    * Wrapper to send a TextMessage, returns the message ID of the sent message
    */
-  def sendTextMessage(messageText: String, props: Map[String, Any]): Message = {
+  def sendTextMessage(messageText: String, props: Map[String, Any], jmsType: Option[String]): Message = {
     val message = session.createTextMessage(messageText)
     writePropsToMessage(props, message)
+    jmsType.foreach(message.setJMSType)
     sendMessage(message)
   }
 

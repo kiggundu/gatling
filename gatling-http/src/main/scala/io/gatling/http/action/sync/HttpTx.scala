@@ -15,6 +15,8 @@
  */
 package io.gatling.http.action.sync
 
+import scala.concurrent.duration._
+
 import io.gatling.commons.stats.OK
 import io.gatling.commons.util.TimeHelper._
 import io.gatling.core.action.Action
@@ -59,7 +61,7 @@ object HttpTx extends NameGen with StrictLogging {
       case None | Some(ContentCacheEntry(None, _, _)) =>
         f(tx)
 
-      case Some(ContentCacheEntry(Some(expire), _, _)) if nowMillis > expire =>
+      case Some(ContentCacheEntry(Some(expire), _, _)) if unpreciseNowMillis > expire =>
         val newTx = tx.copy(session = httpCaches.clearContentCache(tx.session, ahcRequest))
         f(newTx)
 
